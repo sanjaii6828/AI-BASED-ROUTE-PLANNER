@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>AI Travel Route Planner</title>
+
+
+    <!-- ==================================================
+         LEAFLET CSS
+         ================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
+
+
+    <!-- ==================================================
+         OUR CSS
+         ================================================== -->
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+
+    <!-- ==================================================
+         HEADER
+         ================================================== -->
+
+    <header>
+
+        <h1>
+            AI Travel Route Planner
+        </h1>
+
+        <p>
+            Intelligent route recommendation system
+        </p>
+
+    </header>
+
+
+
+    <!-- ==================================================
+         MAIN CONTAINER
+         ================================================== -->
+
+    <main>
+
+
+        <!-- ==================================================
+             INPUT CARD
+             ================================================== -->
+
+        <section class="card">
+
+            <h2>
+                Plan Your Journey
+            </h2>
+
+
+            <!-- START LOCATION -->
+
+            <div class="form-group">
+
+                <label for="start">
+                    Start Location
+                </label>
+
+                <input
+                    type="text"
+                    id="start"
+                    placeholder="Example: Madurai Railway Station"
+                >
+
+            </div>
+
+
+
+            <!-- DESTINATION -->
+
+            <div class="form-group">
+
+                <label for="destination">
+                    Destination
+                </label>
+
+                <input
+                    type="text"
+                    id="destination"
+                    placeholder="Example: Meenakshi Amman Temple"
+                >
+
+            </div>
+
+
+
+            <!-- ==================================================
+                 TRANSPORT
+                 ================================================== -->
+
+            <div class="form-group">
+
+                <label for="transport">
+                    Choose Transport
+                </label>
+
+
+                <select id="transport">
+
+                    <option value="car">
+                        🚗 Car
+                    </option>
+
+                    <option value="bike">
+                        🏍️ Bike
+                    </option>
+
+                    <option value="bus">
+                        🚌 Bus
+                    </option>
+
+                    <option value="train">
+                        🚆 Train
+                    </option>
+
+                    <option value="flight">
+                        ✈️ Flight
+                    </option>
+
+                    <option value="walk">
+                        🚶 Walking
+                    </option>
+
+                </select>
+
+            </div>
+
+
+
+            <!-- ==================================================
+                 ROUTE PREFERENCE
+                 ================================================== -->
+
+            <div class="form-group">
+
+                <label for="preference">
+                    Route Preference
+                </label>
+
+
+                <select id="preference">
+
+                    <option value="balanced">
+                        Balanced
+                    </option>
+
+                    <option value="fastest">
+                        Fastest
+                    </option>
+
+                    <option value="shortest">
+                        Shortest
+                    </option>
+
+                </select>
+
+            </div>
+
+
+
+            <!-- ==================================================
+                 PLAN BUTTON
+                 ================================================== -->
+
+            <button
+                id="planButton"
+                onclick="planRoute()"
+            >
+                PLAN ROUTE
+            </button>
+
+
+
+            <!-- ==================================================
+                 LOADING
+                 ================================================== -->
+
+            <div
+                id="loading"
+                class="loading hidden"
+            >
+
+                Finding the best route...
+
+            </div>
+
+
+
+            <!-- ==================================================
+                 ERROR
+                 ================================================== -->
+
+            <div
+                id="error"
+                class="error hidden"
+            ></div>
+
+        </section>
+
+
+
+        <!-- ==================================================
+             RESULT SECTION
+             ================================================== -->
+
+        <section
+            id="resultSection"
+            class="card hidden"
+        >
+
+            <h2>
+                Recommended Route
+            </h2>
+
+
+
+            <!-- ==================================================
+                 STATISTICS
+                 ================================================== -->
+
+            <div class="stats">
+
+
+                <!-- DISTANCE -->
+
+                <div class="stat">
+
+                    <span class="stat-title">
+                        Distance
+                    </span>
+
+                    <strong id="distance">
+                        -
+                    </strong>
+
+                </div>
+
+
+
+                <!-- TRAVEL TIME -->
+
+                <div class="stat">
+
+                    <span class="stat-title">
+                        Travel Time
+                    </span>
+
+                    <strong id="duration">
+                        -
+                    </strong>
+
+                </div>
+
+
+
+                <!-- TRANSPORT -->
+
+                <div class="stat">
+
+                    <span class="stat-title">
+                        Transport
+                    </span>
+
+                    <strong id="transportResult">
+                        🚗 Car
+                    </strong>
+
+                </div>
+
+
+
+                <!-- ROUTE COUNT -->
+
+                <div class="stat">
+
+                    <span class="stat-title">
+                        Routes Found
+                    </span>
+
+                    <strong id="routeCount">
+                        -
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- ==================================================
+                 TRANSPORT DESCRIPTION
+                 ================================================== -->
+
+            <div class="recommendation">
+
+                <h3>
+                    Transport Information
+                </h3>
+
+                <p id="transportDescription">
+                    -
+                </p>
+
+            </div>
+
+
+
+            <!-- ==================================================
+                 ROUTE RECOMMENDATION
+                 ================================================== -->
+
+            <div class="recommendation">
+
+                <h3>
+                    Route Recommendation
+                </h3>
+
+                <p id="recommendationText">
+                    -
+                </p>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ==================================================
+             MAP SECTION
+             ================================================== -->
+
+        <section
+            id="mapSection"
+            class="card hidden"
+        >
+
+            <h2>
+                Route Map
+            </h2>
+
+
+            <div id="map"></div>
+
+        </section>
+
+
+
+        <!-- ==================================================
+             LOCATION DETAILS
+             ================================================== -->
+
+        <section
+            id="detailsSection"
+            class="card hidden"
+        >
+
+            <h2>
+                Journey Details
+            </h2>
+
+
+
+            <!-- START -->
+
+            <p>
+
+                <strong>
+                    Start:
+                </strong>
+
+                <span id="startName"></span>
+
+            </p>
+
+
+
+            <!-- DESTINATION -->
+
+            <p>
+
+                <strong>
+                    Destination:
+                </strong>
+
+                <span id="destinationName"></span>
+
+            </p>
+
+
+
+            <!-- TRANSPORT -->
+
+            <p>
+
+                <strong>
+                    Transport:
+                </strong>
+
+                <span id="transportDetails">
+                    -
+                </span>
+
+            </p>
+
+
+
+            <!-- PREFERENCE -->
+
+            <p>
+
+                <strong>
+                    Route Preference:
+                </strong>
+
+                <span id="preferenceDetails">
+                    -
+                </span>
+
+            </p>
+
+        </section>
+
+    </main>
+
+
+
+    <!-- ==================================================
+         LEAFLET JS
+         ================================================== -->
+
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+    </script>
+
+
+
+    <!-- ==================================================
+         OUR JAVASCRIPT
+         ================================================== -->
+
+    <script
+        src="{{ url_for('static', filename='app.js') }}">
+    </script>
+
+
+</body>
+
+</html>
